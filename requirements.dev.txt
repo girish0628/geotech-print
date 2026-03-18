@@ -1,0 +1,8 @@
+# Include all production dependencies
+-r requirements.txt
+
+# Development and testing tools
+pytest>=8.0.0
+pytest-cov>=4.1.0
+ruff>=0.4.0
+pre-commit>=3.0.0

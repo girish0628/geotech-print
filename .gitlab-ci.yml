@@ -1,0 +1,24 @@
+# GitLab CI/CD Pipeline
+# ArcPy is mocked in unit tests so the pipeline runs without ArcGIS Pro.
+default:
+  image: python:3.11
+  before_script:
+    - pip install -r requirements.dev.txt
+
+stages:
+  - lint
+  - test
+
+lint:
+  stage: lint
+  script:
+    - ruff check src/ tests/
+
+test:
+  stage: test
+  script:
+    - pytest tests/ -v --junitxml=test-results.xml
+  artifacts:
+    reports:
+      junit: test-results.xml
+    expire_in: 1 week

@@ -1,0 +1,22 @@
+# Application Configuration
+# -------------------------------------------------------
+# Update all values below before running.
+# NEVER hardcode paths, credentials, or URLs in .py files.
+# -------------------------------------------------------
+environment: DEV
+
+# ArcPy / Geodatabase settings
+arcpy:
+  workspace: "C:/GISData/project.gdb"
+  feature_class: "ROADS"
+  fields:
+    - name: ROAD_WIDTH
+      type: DOUBLE
+    - name: SURFACE_TYPE
+      type: TEXT
+      length: 50
+
+# FME Flow webhook settings
+fme:
+  webhook_url: "https://fme.company.com/fmeserver/webhooks/workflow"
+  timeout: 60
