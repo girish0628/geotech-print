@@ -1,0 +1,8 @@
+# Core dependencies
+# ---------------------------------------------------------
+# NOTE: ArcPy is provided by ArcGIS Pro — do NOT install
+# it via pip. Run this project from the ArcGIS Pro cloned
+# conda environment. See README.md for setup instructions.
+# ---------------------------------------------------------
+pyyaml>=6.0.1
+requests>=2.32.0

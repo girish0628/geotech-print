@@ -1,0 +1,23 @@
+# Site configuration — Eastern Ridge (ER)
+# Minestar source; MGA Zone 50 output
+
+site: ER
+source_type: minestar
+
+input_spatial_reference: "GDA 1994 MGA Zone 50"
+
+z_adjustment: 3.155
+max_z: 4000.0
+min_neighbours: 2
+neighbour_radius: 10.0
+
+despike: true
+despike_tolerance: 2.0
+
+grid_size: 2.0
+aoi_where_clause: "MineSite='ER'"
+
+snp_col_x: 0
+snp_col_y: 1
+snp_col_z: 2
+snp_col_dt: 3

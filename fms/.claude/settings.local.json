@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest tests/test_pipeline/test_base_step.py tests/test_pipeline/test_snippet_to_csv.py tests/test_utils/test_snippet_parser.py tests/test_pipeline/test_surface_packager.py -v)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/test_pipeline/ tests/test_utils/ -v)"
+    ]
+  }
+}

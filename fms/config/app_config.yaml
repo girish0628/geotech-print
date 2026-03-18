@@ -1,0 +1,97 @@
+# FMS Live Surface Pipeline — Application Configuration
+# -------------------------------------------------------
+# NEVER hardcode credentials, server names, or UNC paths
+# in Python source files.  All environment-specific values
+# belong here or in config/sites/<SITE>.yaml.
+#
+# Jenkins passes: --config config/app_config.yaml
+# Override with a PROD copy at deploy time.
+# -------------------------------------------------------
+
+environment: DEV
+
+# -------------------------------------------------------
+# Pipeline behaviour
+# -------------------------------------------------------
+pipeline:
+
+  # 'decoupled' (proposed) — FMS pipeline stops at Surface Package.
+  #   A separate Enterprise Mosaic Publisher service handles SDE ingestion.
+  #
+  # 'current' (legacy) — FMS pipeline publishes directly into SDE.
+  #   MosaicPublisherClientStep (direct_sde mode) is included automatically.
+  mode: decoupled
+
+  # Output spatial reference — MGA zone 50 (GDA94)
+  output_sr: "GDA 1994 MGA Zone 50"
+
+  # Raster cell size (metres) — may be overridden per-site in sites/<SITE>.yaml
+  default_grid_size: 2.0
+
+  # Set to true to retain scratch.gdb after elevation processing (useful for debugging)
+  keep_scratch: false
+
+  # MTD_Live_RoadsBuffered feature class used as exclusion zone in boundary generation.
+  # Leave empty to skip the exclusion/erase step.
+  # Example: "//sde-server.domain/connection.sde/MTD.DBO.MTD_Live_RoadsBuffered"
+  roads_buffer_fc: ""
+
+  # File paths — use forward slashes or UNC paths
+  paths:
+    # GIP drops raw files here; structure: <landing_base>/<site>/snippet/*.snp
+    #                                      <landing_base>/<site>/csv/*.csv
+    landing_base: "//file-server/FMS_Landing"
+
+    # Intermediate working directory; structure: <staging_base>/<site>/<timestamp>/
+    staging_base: "//file-server/FMS_Staging"
+
+    # Final Surface Package output (decoupled mode)
+    # Structure: <output_base>/<site>/<timestamp>/
+    output_base: "//file-server/FMS_Output"
+
+    # Published raster location (current/legacy mode only)
+    published_location: "//file-server/FMS_Published"
+
+    # Nightly archive destination
+    archive_base: "//file-server/FMS_Archive"
+
+# -------------------------------------------------------
+# Mosaic Publisher integration (decoupled mode)
+# -------------------------------------------------------
+mosaic_publisher:
+
+  # file_trigger — publisher polls for ready.flag (recommended for decoupled)
+  # api_call     — POST package path to REST API
+  # direct_sde   — ArcPy direct mosaic publish (used by 'current' pipeline mode)
+  integration_mode: file_trigger
+
+  # Name of the trigger file written to signal a complete Surface Package
+  trigger_file_name: ready.flag
+
+  # REST API endpoint (api_call mode only)
+  # Example: "https://gis-platform.domain/api/v1/mosaic/publish"
+  api_endpoint: ""
+
+  # Optional notification URL pinged after ready.flag is written (file_trigger mode)
+  # Leave empty to disable.
+  notify_url: ""
+
+  # HTTP timeout for API calls (seconds)
+  timeout: 60
+
+# -------------------------------------------------------
+# SDE connection (direct_sde / current mode only)
+# -------------------------------------------------------
+sde:
+  # Path to the ArcGIS Server SDE connection file
+  # Example: "//gis-server/connections/enterprise_prod.sde"
+  connection_file: ""
+
+  # Fully qualified source mosaic dataset name within the SDE
+  source_mosaic: "MTD.DBO.FMS_LiveSurface_Source"
+
+  # Derived mosaic dataset (synchronised after source update)
+  derived_mosaic: "MTD.DBO.FMS_LiveSurface_Derived"
+
+  # ArcPy raster type for AddRastersToMosaicDataset
+  raster_type: "Raster Dataset"

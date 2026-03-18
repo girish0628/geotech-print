@@ -1,0 +1,23 @@
+# Site configuration — Tom Price / Turee Creek (TG)
+# Minestar source; MGA Zone 50 output
+
+site: TG
+source_type: minestar
+
+input_spatial_reference: "GDA 1994 MGA Zone 50"
+
+z_adjustment: 0.0
+max_z: 4000.0
+min_neighbours: 2
+neighbour_radius: 10.0
+
+despike: true
+despike_tolerance: 2.0
+
+grid_size: 2.0
+aoi_where_clause: "MineSite='TG'"
+
+snp_col_x: 0
+snp_col_y: 1
+snp_col_z: 2
+snp_col_dt: 3

@@ -1,0 +1,24 @@
+# Site configuration — Jimblebar (JB)
+# Modular source; WB94 input; MGA Zone 50 output
+
+site: JB
+source_type: modular
+
+input_spatial_reference: "WGS 1984"   # Replace with actual WB94 WKID/name for this site
+
+z_adjustment: 0.0
+max_z: 4000.0
+min_neighbours: 2
+neighbour_radius: 10.0
+
+despike: true
+despike_tolerance: 2.0
+
+grid_size: 2.0
+aoi_where_clause: "MineSite='JB'"
+
+# Modular CSV column names — adjust to match actual file headers
+modular_x_col: "Easting"
+modular_y_col: "Northing"
+modular_z_col: "Elevation"
+modular_datetime_col: "Timestamp"

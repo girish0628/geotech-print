@@ -1,0 +1,136 @@
+// FMS Live Surface Pipeline — Jenkinsfile
+//
+// Runs on an ArcGIS Pro Jenkins agent (label: 'arcgis-pro').
+// Each mine site has its own parameterised job triggered by the
+// MTD - Hourly FMS multijob (parallel execution across 5 sites).
+//
+// Jenkins CLI usage:
+//   java -jar jenkins-cli.jar -s http://jenkins:8080 \
+//     build FMS-LiveSurface-WB \
+//     -p ENV=PROD \
+//     -p SITE=WB \
+//     -p SOURCE_TYPE=minestar
+
+pipeline {
+    agent { label 'arcgis-pro' }
+
+    parameters {
+        choice(
+            name: 'ENV',
+            choices: ['DEV', 'UAT', 'PROD'],
+            description: 'Target environment'
+        )
+        choice(
+            name: 'SITE',
+            choices: ['WB', 'ER', 'TG', 'JB', 'NM'],
+            description: 'Mine site code'
+        )
+        choice(
+            name: 'SOURCE_TYPE',
+            choices: ['minestar', 'modular'],
+            description: 'FMS data source type'
+        )
+        booleanParam(
+            name: 'DRY_RUN',
+            defaultValue: false,
+            description: 'Validate config only — no files written or published'
+        )
+        string(
+            name: 'ARCGIS_PYTHON',
+            defaultValue: 'C:/Program Files/ArcGIS/Pro/bin/Python/envs/arcgispro-py3/python.exe',
+            description: 'ArcGIS Pro Python executable. Use a cloned conda env path in production.'
+        )
+        string(
+            name: 'CONFIG_PATH',
+            defaultValue: 'config/app_config.yaml',
+            description: 'Path to application config YAML'
+        )
+        string(
+            name: 'LOGGING_PATH',
+            defaultValue: 'config/logging.prod.yaml',
+            description: 'Path to logging config YAML'
+        )
+        string(
+            name: 'SITE_CONFIG_DIR',
+            defaultValue: 'config/sites',
+            description: 'Directory containing per-site YAML files'
+        )
+    }
+
+    stages {
+
+        stage('Setup') {
+            steps {
+                bat "\"${params.ARCGIS_PYTHON}\" -m pip install --upgrade pip --quiet"
+                bat "\"${params.ARCGIS_PYTHON}\" -m pip install -r requirements.txt --quiet"
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                bat "\"${params.ARCGIS_PYTHON}\" -m ruff check src/ tests/"
+            }
+        }
+
+        stage('Test') {
+            steps {
+                bat "\"${params.ARCGIS_PYTHON}\" -m pytest tests/ -v --junitxml=test-results.xml"
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'test-results.xml'
+                }
+            }
+        }
+
+        stage('Dry-Run Validate') {
+            when {
+                expression { return params.DRY_RUN == true }
+            }
+            steps {
+                bat """
+                    \"${params.ARCGIS_PYTHON}\" -m src.runners.main_runner ^
+                        --config   ${params.CONFIG_PATH} ^
+                        --logging  ${params.LOGGING_PATH} ^
+                        --env      ${params.ENV} ^
+                        --site     ${params.SITE} ^
+                        --source   ${params.SOURCE_TYPE} ^
+                        --site-config-dir ${params.SITE_CONFIG_DIR} ^
+                        --dry-run
+                """
+            }
+        }
+
+        stage('Run Pipeline') {
+            when {
+                expression { return params.DRY_RUN == false }
+            }
+            steps {
+                bat """
+                    \"${params.ARCGIS_PYTHON}\" -m src.runners.main_runner ^
+                        --config   ${params.CONFIG_PATH} ^
+                        --logging  ${params.LOGGING_PATH} ^
+                        --env      ${params.ENV} ^
+                        --site     ${params.SITE} ^
+                        --source   ${params.SOURCE_TYPE} ^
+                        --site-config-dir ${params.SITE_CONFIG_DIR}
+                """
+            }
+        }
+
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'logs/*.log', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'test-results.xml', allowEmptyArchive: true
+        }
+        success {
+            echo "FMS Pipeline (${params.SITE}) completed successfully."
+        }
+        failure {
+            echo "FMS Pipeline (${params.SITE}) FAILED. Check archived logs."
+            // Add email/Teams notification step here
+        }
+    }
+}

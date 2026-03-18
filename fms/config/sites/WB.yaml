@@ -1,0 +1,37 @@
+# Site configuration — Whaleback (WB)
+# Minestar source; MGA Zone 50 output
+
+site: WB
+source_type: minestar
+
+# Coordinate reference system of raw snippet data
+input_spatial_reference: "GDA 1994 MGA Zone 50"
+
+# Z datum adjustment: add this value to convert ADPH elevation to AHD (metres)
+z_adjustment: 3.155
+
+# Reject points above this elevation (outlier / corrupt data guard)
+max_z: 4000.0
+
+# Noise filter: minimum number of neighbours within neighbour_radius metres
+min_neighbours: 2
+neighbour_radius: 10.0
+
+# Despike: clamp Z values deviating from median by more than despike_tolerance
+despike: true
+despike_tolerance: 2.0
+
+# Output raster cell size (metres) — overrides pipeline.default_grid_size
+grid_size: 2.0
+
+# AOI SQL where clause applied when filtering points to the mine lease boundary
+# (passed to ArcPy SelectLayerByAttribute if AOI feature class is configured)
+aoi_where_clause: "MineSite='WB'"
+
+# Snippet file column positions (0-based) and delimiter
+# Verify these match the actual Minestar export format for this site
+snp_col_x: 0
+snp_col_y: 1
+snp_col_z: 2
+snp_col_dt: 3
+# snp_delimiter: null   # null = split on any whitespace (default)
