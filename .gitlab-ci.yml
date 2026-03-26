@@ -1,24 +1,81 @@
 # GitLab CI/CD Pipeline
-# ArcPy is mocked in unit tests so the pipeline runs without ArcGIS Pro.
+# Self-hosted runner (shell executor) with ArcGIS Pro cloned conda env.
+# No Docker image — runs directly on the runner machine.
+# ArcPy and all GIS libraries are already available in the cloned env.
+
+# ---------------------------------------------------------------------------
+# CONFIGURE THESE VARIABLES
+# Set ARCGIS_PYTHON in GitLab: Settings > CI/CD > Variables  (or edit here)
+# ---------------------------------------------------------------------------
+variables:
+  # Absolute path to the cloned ArcGIS conda env Python executable.
+  # User install:    C:/Users/<user>/AppData/Local/ESRI/conda/envs/geotech-print-env/python.exe
+  # Service account: C:/ProgramData/ESRI/conda/envs/geotech-print-env/python.exe
+  ARCGIS_PYTHON: "C:/ProgramData/ESRI/conda/envs/geotech-print-env/python.exe"
+  SCRIPTS_DIR:   "C:/ProgramData/ESRI/conda/envs/geotech-print-env/Scripts"
+
+# No default image — shell executor uses the runner machine directly.
 default:
-  image: python:3.11
-  before_script:
-    - pip install -r requirements.dev.txt
+  tags:
+    - arcgis-pro      # Target only the runner that has ArcGIS Pro installed.
 
 stages:
   - lint
   - test
+  - run
 
+# ---------------------------------------------------------------------------
+# Lint
+# ---------------------------------------------------------------------------
 lint:
   stage: lint
   script:
-    - ruff check src/ tests/
+    - '"$ARCGIS_PYTHON" "$SCRIPTS_DIR/ruff" check src/ tests/'
 
+# ---------------------------------------------------------------------------
+# Test
+# Libraries already installed in the cloned env — no pip install needed.
+# ---------------------------------------------------------------------------
 test:
   stage: test
   script:
-    - pytest tests/ -v --junitxml=test-results.xml
+    - '"$ARCGIS_PYTHON" "$SCRIPTS_DIR/pytest" tests/ -v --junitxml=test-results.xml'
   artifacts:
     reports:
       junit: test-results.xml
     expire_in: 1 week
+
+# ---------------------------------------------------------------------------
+# Run  (manual trigger — protect PROD with GitLab environment protection rules)
+# ---------------------------------------------------------------------------
+run_dev:
+  stage: run
+  when: manual
+  environment: DEV
+  script:
+    - '"$ARCGIS_PYTHON" -m src.runners.main_runner
+        --config config-repo/DEV/app_config.yaml
+        --logging config-repo/DEV/logging.yaml
+        --env DEV'
+
+run_uat:
+  stage: run
+  when: manual
+  environment: UAT
+  script:
+    - '"$ARCGIS_PYTHON" -m src.runners.main_runner
+        --config config-repo/UAT/app_config.yaml
+        --logging config-repo/UAT/logging.yaml
+        --env UAT'
+
+run_prod:
+  stage: run
+  when: manual
+  environment: PROD
+  # Require explicit approval before PROD runs.
+  # Configure: Settings > Environments > PROD > Required approvals
+  script:
+    - '"$ARCGIS_PYTHON" -m src.runners.main_runner
+        --config config-repo/PROD/app_config.yaml
+        --logging config-repo/PROD/logging.yaml
+        --env PROD'
