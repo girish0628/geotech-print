@@ -87,8 +87,19 @@ ruff check src/ tests/
 
 ## Configuration
 
+### Local development
+
 Edit `config/app_config.yaml` before running. All paths and URLs must be real values.
 No hardcoded values are allowed in `.py` files.
+
+### Jenkins / CI (separate config repo)
+
+Environment-specific config lives in a **separate** GitLab repo (`geotech-print-config`).
+Jenkins clones that repo at runtime and passes the correct env folder to the runner.
+
+See [`docs/jenkins-config-repo-setup.md`](docs/jenkins-config-repo-setup.md) for the
+full setup guide, including how to create the config repo, add Jenkins credentials,
+and the expected workspace layout.
 
 ## Adding a New Service
 

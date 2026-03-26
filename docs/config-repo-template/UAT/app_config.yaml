@@ -1,0 +1,20 @@
+# UAT Environment Configuration
+# -------------------------------------------------------
+# This file lives in the separate config repo:
+#   geotech-print-config/UAT/app_config.yaml
+# -------------------------------------------------------
+environment: UAT
+
+arcpy:
+  workspace: "C:/GISData/uat/project.gdb"
+  feature_class: "ROADS"
+  fields:
+    - name: ROAD_WIDTH
+      type: DOUBLE
+    - name: SURFACE_TYPE
+      type: TEXT
+      length: 50
+
+fme:
+  webhook_url: "https://fme.company.com/fmeserver/webhooks/workflow-uat"
+  timeout: 60
